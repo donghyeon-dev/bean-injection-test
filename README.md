@@ -131,8 +131,9 @@ if (matchingBeans.size() > 1) {   // (2)
        }    }    instanceCandidate = matchingBeans.get(autowiredBeanName);
        
 ```
-[1]타입과 일치하는 Bean이 없다면 주입시 NULL이 발생한다는것을 코드로 확인할 수 있음
-[2]일치하는 Bean이 1개 이상일때는 아래 메서드명에서 유추하듯이 후보자들에서 결정함
+ (1)타입과 일치하는 Bean이 없다면 주입시 NULL이 발생한다는것을 코드로 확인할 수 있음
+ 
+ (2)일치하는 Bean이 1개 이상일때는 아래 메서드명에서 유추하듯이 후보자들에서 결정함
 
 ``` java
 @Nullable
