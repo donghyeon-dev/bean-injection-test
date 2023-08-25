@@ -14,7 +14,6 @@ public RestTemplate restTemplate() {
 ```
 위 설정과 다른 Bean을 프로젝트 내부에 생성하고 `@Qualifier`를 통해 주입하던것을 확인했다.
 ``` java
-// ShinsegaenmRestTemplateConfig.java
 @Bean  
 public RestTemplate targetRestTemplate() {  
   
