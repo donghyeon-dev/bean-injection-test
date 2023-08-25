@@ -3,6 +3,7 @@
 ## @Primary가 있다면 Bean이름으로 주입이 안된다
 별도의 설정을 한 RestTemplate Bean을 사용하려는데, 내부 라이브러리에 `@Primary`로 등록된 RestTemplateBean이 있었다.
 ```java
+// osc-spring-boot-starter...
 @Bean  
 @Primary  
 public RestTemplate restTemplate() {  
@@ -13,7 +14,7 @@ public RestTemplate restTemplate() {
 ```
 위 설정과 다른 Bean을 프로젝트 내부에 생성하고 `@Qualifier`를 통해 주입하던것을 확인했다.
 ``` java
-// RestTemplateConfig.java
+// ShinsegaenmRestTemplateConfig.java
 @Bean  
 public RestTemplate targetRestTemplate() {  
   
@@ -57,9 +58,9 @@ public class TargetService{
 ```
 #### 현재 상황
 1. Bean 주입은 @RequiredArgsConstructor + final 을 통해 하고있음
-2. RestTemplate의 Bean은 내부라이브러리에 `@Primary`로 선언되어있음
-3. 별도의 설정을 넣은 RestTemplate Bean을 beanName과 함께 생성함
-4. `@Qualifier`를 직접적으로 필드에서 선언을 못함
+2. 위에 대한 이유로 `@Qualifier`를 직접적으로 필드에서 선언을 못함
+3. RestTemplate의 Bean은 내부라이브러리에 `@Primary`로 선언되어있음
+4. 별도의 설정을 넣은 RestTemplate Bean을 beanName과 함께 생성함
 5. <U>클래스 생성자를 별도로 사용하고 싶지 않음</U>
 
 
@@ -77,8 +78,7 @@ public class TargetService{
 	...
 }
 ```
-   -> 내부라이브러리에 `@Primary` 선언된 Bean 으로인해 BeanName만으론 주입되지 않는다.
-   만약에 @Primary를 제거한다면, 내가 사용하는 코드는 BeanName으로 주입이 되겠지만 기존코드들은..?
+   -> 내부라이브러리에 `@Primary` 선언된 Bean 으로인해 BeanName만으론 주입되지 않는다. 만약에 @Primary를 제거한다면, 내가 사용하는 코드는 BeanName으로 주입이 되겠지만.. 기존코드들이 다 영향을 받을것이다.
    
 2. 주입하는 필드 위에 @Qualifier선언
 ```java
@@ -96,16 +96,13 @@ public class TargetService{
    `Lombok does not copy the annotation 'org.springframework.beans.factory.annotation.Qualifier' into the constructor`
    생성자를 통해 주입할때 필드 위의 어노테이션은 복사를 하지 않는다고 한다.
    
-3. lombok.config 설정 을 통한 해결
-   구글링을 통해 `@Qualifier` 어노테이션을 생성자주입에 사용하는 방법을 찾았다.
-   ``` config
-   # lombok.config
-   lombok.copyableAnnotations += org.springframework.beans.factory.annotation.Qualifier
-   ```
+3. lombok.config 설정을 통한 해결
+   구글링을 통해 `@Qualifier` 어노테이션을 `@RequiredArgsConstructor` 생성자주입에 사용하는 방법을 찾았다.
+```config
+# lombok.config
+lombok.copyableAnnotations += org.springframework.beans.factory.annotation.Qualifier
+```
    -> root 하위에 lombok.config 파일을 생성하고, 위 설정을 추가해주면 Qualifier 어노테이션을 복사가 가능하게 된다.
-
-
-
 
 
 
@@ -164,18 +161,18 @@ protected String determineAutowireCandidate(Map<String, Object> candidates, Depe
 ```
 여러개의 Bean이 생성됬을때는 `@Primary` 가 가장 우선으로 주입됨을 확인 할 수 있다. 그 이후 `@Priority` , BeanName을 통해 후보자들에서 색출해낸다.
 
-## 검증
+#### 검증
 RestTemplate Bean을 2개를 만들어보고 소스에서 확인한 내용이 맞는지 확인해본다.
 ``` java
 @Configuration  
 public class CustomConfig {  
-    // 10초짜리 Named Bean    @Bean  
+	@Bean
     public RestTemplate fooRestTemplate(){  
         return new RestTemplateBuilder()  
                 .setConnectTimeout(Duration.ofSeconds(10))  
                 .build();  
     };  
-    // 1초짜리 Primary    @Bean  
+    @Bean
     public RestTemplate varRestTemplate(){  
         return new RestTemplateBuilder()  
                 .setConnectTimeout(Duration.ofSeconds(1))  
@@ -200,8 +197,10 @@ class CustomConfigTest {
 }
 ```
 Intellij의 inspection으로 코드를 돌려도 보기 전에 경고가 나온다.
-![[Pasted image 20230824221155.png]]
 동일한 Type의 bean이 1개 이상이여서 실행 전에도 코드에 문제가 있다는것을 알 수 있었다.
+```
+Caused by: org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'org.springframework.web.client.RestTemplate' available: expected single matching bean but found 2: fooRestTemplate,varRestTemplate
+```
 
 2. 변수명을 BeanName과 일치시키는 경우
 ```java 
@@ -223,3 +222,65 @@ void Bean_Injection_test(){
 **/
 ```
 소스 내용으로 유추했던것과 정확하게 서로 다른 Bean을 가지고있는걸 확인 할 수 있다.
+
+3. Named Bean과 @Primary Bean이 존재하는 경우
+``` java 
+@Primary  
+public RestTemplate fooRestTemplate(){  
+    return new RestTemplateBuilder()  
+            .setConnectTimeout(Duration.ofSeconds(10))  
+            .build();  
+};  
+  
+@Bean  
+public RestTemplate varRestTemplate(){  
+    return new RestTemplateBuilder()  
+            .setConnectTimeout(Duration.ofSeconds(1))  
+            .build();  
+}
+```
+fooRestTemplate을 @Primary로 변경하고 테스트를 진행한다.
+``` java
+@Autowired  
+private RestTemplate fooRestTemplate;  
+  
+@Autowired  
+private RestTemplate varRestTemplate;  
+  
+@Autowired  
+private RestTemplate restTemplate;  
+  
+@Test  
+void Bean_Injection_test(){  
+    log.info("fooRestTemplate's id ={}",fooRestTemplate);  
+    log.info("varRestTemplate's id ={}",varRestTemplate);  
+    log.info("restTemplate's id ={}", restTemplate);  
+};
+/**
+* fooRestTemplate's id =org.springframework.web.client.RestTemplate@2bba35ef
+* varRestTemplate's id =org.springframework.web.client.RestTemplate@2bba35ef
+* restTemplate's id =org.springframework.web.client.RestTemplate@2bba35ef
+**/
+```
+BeanName과 일치하던지 안하던지 무조건 @Primary의 Bean을 가져오는것을 확인 할 수 있었다.
+
+4. @Primary Bean 주입을 피하기 위한 @Qualifier를 사용하는 경우
+``` java
+@Autowired  
+private RestTemplate fooRestTemplate;  
+
+@Qualifier("varRestTemplate")  
+@Autowired  
+private RestTemplate varRestTemplate;  
+  
+   @Test  
+void Bean_Injection_test(){  
+       log.info("fooRestTemplate's id ={}",fooRestTemplate);  
+       log.info("varRestTemplate's id ={}",varRestTemplate);  
+}
+/**
+* fooRestTemplate's id =org.springframework.web.client.RestTemplate@5ba1b62e
+* varRestTemplate's id =org.springframework.web.client.RestTemplate@2bba35ef
+**/ 
+```
+의도대로 원하는 필드에 특정 Bean을 주입하는것을 확인 할 수 있었다.
