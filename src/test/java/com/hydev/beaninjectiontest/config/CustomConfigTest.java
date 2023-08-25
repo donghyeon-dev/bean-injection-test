@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -28,6 +29,7 @@ class CustomConfigTest {
     @Autowired
     private RestTemplate fooRestTemplate;
 
+    @Qualifier("varRestTemplate")
     @Autowired
     private RestTemplate varRestTemplate;
 
@@ -35,6 +37,7 @@ class CustomConfigTest {
     void Bean_Injection_test(){
         log.info("fooRestTemplate's id ={}",fooRestTemplate);
         log.info("varRestTemplate's id ={}",varRestTemplate);
+//        log.info("restTemplate's id ={}", restTemplate);
     }
 
 }

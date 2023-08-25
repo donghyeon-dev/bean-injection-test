@@ -12,6 +12,7 @@ import java.time.Duration;
 public class CustomConfig {
 
     // 10초짜리 Named Bean
+    @Primary
     @Bean
     public RestTemplate fooRestTemplate(){
         return new RestTemplateBuilder()
