@@ -62,7 +62,9 @@ public class TargetService{
 5. <U>클래스 생성자를 별도로 사용하고 싶지 않음</U>
 
 <hr>
+
 #### 시도한 방법
+
 1. 주입할 대상의 필드명을 Bean명과 일치시킨다.
 ```java
 @RequiredArgsConstructor
@@ -103,10 +105,11 @@ lombok.copyableAnnotations += org.springframework.beans.factory.annotation.Quali
    -> root 하위에 lombok.config 파일을 생성하고, 위 설정을 추가해주면 Qualifier 어노테이션을 복사가 가능하게 된다.
 
 <hr>
+
 #### Bean주입에 대한 스프링 코드
+
 ``` java
 // DefaultListableBeanFactory.java
-...
 @Nullable  
 public Object doResolveDependency(DependencyDescriptor descriptor, @Nullable String beanName,  
        @Nullable Set<String> autowiredBeanNames, @Nullable TypeConverter typeConverter) throws BeansException {
@@ -158,7 +161,9 @@ protected String determineAutowireCandidate(Map<String, Object> candidates, Depe
 여러개의 Bean이 생성됬을때는 `@Primary` 가 가장 우선으로 주입됨을 확인 할 수 있다. 그 이후 `@Priority` , BeanName을 통해 후보자들에서 색출해낸다.
 
 <hr>
+
 #### 검증
+
 RestTemplate Bean을 2개를 만들어보고 소스에서 확인한 내용이 맞는지 확인해본다.
 ``` java
 @Configuration  
