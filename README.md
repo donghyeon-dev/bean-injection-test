@@ -21,14 +21,14 @@ public RestTemplate targetRestTemplate() {
                 .setConnectTimeout(Duration.ofSeconds(5))  
                 .setReadTimeout(Duration.ofSeconds(120))  
                 .additionalInterceptors(new LoggingInterceptor())  
-                .requestFactory(this::shinsegaenmBufferingClientHttpRequestFactory)  
+                .requestFactory(this::bufferingClientHttpRequestFactory)  
                 .build();  
     } else {  
         return new RestTemplateBuilder()  
                 .setConnectTimeout(Duration.ofSeconds(5))  
                 .setReadTimeout(Duration.ofSeconds(120))  
                 .additionalInterceptors(new LoggingInterceptor())  
-                .requestFactory(this::shinsegaenmBufferingClientHttpRequestFactory)  
+                .requestFactory(this::bufferingClientHttpRequestFactory)  
                 .build();  
     }
     ...
